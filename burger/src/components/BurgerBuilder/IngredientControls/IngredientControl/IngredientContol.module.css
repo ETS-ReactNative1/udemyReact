@@ -1,0 +1,63 @@
+.horizontal {
+    margin: 0;
+    padding: 0;
+}
+
+.horizontal li {
+    display: inline-block;
+}
+
+.horizontal button {
+    margin-right: 10px;
+    margin-left: 10px;
+}
+
+.IngredientControl {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 5px 0;
+}
+
+.IngredientControl button {
+    display: block;
+    font: inherit;
+    padding: 5px;
+    margin: 0 5px;
+    width: 80px;
+    border: 1px solid #aa6b17;
+    cursor: pointer;
+    outline :none;
+}
+
+.IngredientControl button:disabled {
+    background-color: #AC9980;
+    color: #ccc;
+    cursor: not-allowed;
+}
+
+.Label {
+    padding: 10px;
+    font-weight: bold;
+    width: 80px;
+}
+
+.IngredientControl .Less {  
+    background-color: #D39952;
+    color: white;
+}
+
+.IngredientControl .More {
+    background-color: #8F5E1E;
+    color: white;
+}
+
+.IngredientControl .Less:hover, .IngredientControl .Less:active {  
+    background-color: #DAA972;
+    color: white;
+}
+
+.IngredientControl .More:hover,.IngredientControl .More:active {
+    background-color: #99703F;
+    color: white;
+}

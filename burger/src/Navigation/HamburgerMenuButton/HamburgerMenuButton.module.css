@@ -1,0 +1,32 @@
+
+.HamburgerMenuButton{
+
+}
+.HamburgerMenuButtonInner {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    flex-flow: column;
+    justify-content: space-around;
+    align-items: center;
+    padding: 10px 0;
+    box-sizing: border-box;
+    cursor: pointer;
+}
+
+.HamburgerMenuButtonInner div {
+    width: 90%;
+    height: 3px;
+    background-color: white;
+}
+
+.HamburgerMenuButton button {
+    height:80%;
+    background-color: #d39952;
+}
+
+@media (min-width: 500px) {
+    .HamburgerMenuButton {
+        display: none;
+    }
+}
