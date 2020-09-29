@@ -1,9 +1,8 @@
 import React, {Component} from 'react'
-import Aux from '../../HOC/AuxiliaryContainter'
 import {IngredientTypes, BurgerOptions} from './IngredientTypes.ts'
 import VisualBurger from './VisualBurger/VisualBurger'
 import IngredientControls from './IngredientControls/IngredientControls';
-import IngredientControlContext from '../../contexts/ingredientControl-Context';
+import IngredientControlContext from '../../contexts/ingredientControl-Context'; 
 import BurgerIngredientContext from '../../contexts/burgerIngredient-Context';
 import Modal from '../UI/Modal/Modal';
 import OrderSummary from './OrderSummary/OrderSummary';
@@ -11,6 +10,8 @@ import Button from '../UI/Button/Button'
 import axios_order_instance from '../../axios-orders';
 import Spinner from '../UI/Spinner/Spinner'
 import WithErrorHandler from '../../HOC/WithErrorHandler'
+import {Link} from 'react-router-dom'
+import cartContext from '../../contexts/cart-Context';
 
 
 class BurgerBuilder extends Component {
@@ -18,9 +19,34 @@ class BurgerBuilder extends Component {
     state = {
         currentOrderIngredients: [IngredientTypes.Meat],
         orders: [],
-        purchasing: false,
-        busy: false
+        busy: false,
+        orderNumber: null
     };
+
+    componentDidMount () {
+        this.setState({busy: true})
+        axios_order_instance.get('/cart.json')
+        .then(getResponse => {
+            let neworders = []
+            let newHash = null
+
+            Object.keys(getResponse.data).forEach(hash => {
+                newHash = hash;
+                Object.keys(getResponse.data[hash].Burgers).forEach(burgerKey =>{
+                    let burgerOrder = getResponse.data[hash].Burgers[burgerKey]
+                    neworders.push(burgerOrder.Ingredients) })
+            })
+        
+            
+            this.setState({orderNumber:newHash, 
+                            orders:neworders,
+                            busy:false})
+            }
+            
+        )
+        .catch(getError => console.log(getError),
+                            this.setState({busy: false}))
+    }
 
     IncreaseIngredientHandler = (event,type) => {
         const ingredients =[...this.state.currentOrderIngredients]
@@ -93,6 +119,8 @@ class BurgerBuilder extends Component {
 
 
     AddCurrentBurgerToOrder = () => {
+        
+        this.setState({busy:true})
         let ingredientsCopy = [...this.state.currentOrderIngredients]
         let ordersCopy = [...this.state.orders]
 
@@ -100,92 +128,90 @@ class BurgerBuilder extends Component {
 
         let newBurger = [IngredientTypes.Meat]
         this.setState({orders: ordersCopy, currentOrderIngredients:newBurger})
-    }
 
-    PurchasingStartedHandler = () => {
-        this.setState({purchasing: true})
-    }
-
-    PurchasingCanceledHandler = () => {
-        this.setState({purchasing: false})
-    }
-
-    PurchasingSucceededHandler = () => {
-        this.setState({busy:true})
-
-        const jsonOrders= this.state.orders.map((order,index) => {
-            let cost = this.GetCostPerOrder(order);
-
-            return(
-                {
-                    Ingredients: order,
+        const cost = this.GetCostPerOrder(ingredientsCopy);
+        const jsonBurger = {
+                    Ingredients: ingredientsCopy,
                     Cost: cost
                 }
-            )
-        })
 
-        let totalCost = this.GetTotalCost();
-        const jsonTotalOrder = {
-            Burgers: jsonOrders,
-            Total: totalCost,
-            customer: {
-                    name : "Bruce Wayne",
-                    deliveryAddress: {
-                            street: '1 Bat Rd',
-                            city: 'Gotham',
-                            country: 'United States',
-                            zip: '0655239'
-                    },
-                    email : 'test@test.com',
-            },
-            deliveryMethod: 'fast'
+
+
+        if(this.state.orderNumber !== null){
+            axios_order_instance.get('/cart/' + this.state.orderNumber +'.json')
+            .then(response => {
+                let orders = response.data.Burgers
+                orders.push(jsonBurger)
+                
+
+                axios_order_instance.patch('/cart/' + this.state.orderNumber +'/.json', {'Burgers':orders, 'Total':(response.data.Total+cost)})
+                .then(() => this.setState({busy:false})
+                )
+                .catch(error => {this.setState({busy:false})
+                                console.log(error)})                   
+            
+            })
+            .catch(this.setState({busy:false}))
+
+          
         }
-
-        axios_order_instance.post('/orders.json', jsonTotalOrder)
-            .then(this.setState({orders : [], 
-                                currentOrderIngredients: [IngredientTypes.Meat],
-                                busy:false,
-                                purchasing:false}))
-            .catch(error => {this.setState({busy:false,
-                                            purchasing:false})
-                            console.log(error)})
-        
+        else {
+            axios_order_instance.post('/cart.json', {
+                Burgers: [jsonBurger],
+                Total: cost
+            })
+            .then(response => this.setState({busy:false,
+                                            orderNumber: response.data.name})
+            )
+            .catch(error => {this.setState({busy:false})
+                            console.log(error)}) 
+        }
     }
 
     render () {
 
         let orderModal = (
-            <React.Fragment>
-                <OrderSummary orders={this.state.orders} costs={this.state.orders.map((order) => {return (this.GetCostPerOrder(order))})}/>
-                <Button type="Confirm" click={this.PurchasingSucceededHandler}>Purchase</Button>
-                <Button type="Cancel" click={this.PurchasingCanceledHandler}>Cancel</Button>
-            </React.Fragment>)
+            <cartContext.Consumer>
+                {(context) => (
+                    <React.Fragment>
+                        <OrderSummary orders={this.state.orders} costs={this.state.orders.map((order) => {return (this.GetCostPerOrder(order))})}/>
+                        <Link to={{pathname:'/orders'}}>
+                            <Button type="Confirm" disabled={this.state.orderNumber === null}>
+                                Purchase
+                            </Button>
+                        </Link>
+                        <Button type="Cancel" click={(ev) => {context.setCartOpen(false)}}>Cancel</Button> 
+                    </React.Fragment>)}
+            </cartContext.Consumer>)
         if(this.state.busy)
         {
             orderModal = <Spinner/>
         }
 
-        return (
-        <Aux>
-            <BurgerIngredientContext.Provider value={{removeFromIndex: this.RemoveIngredientFromIndex}}>
-                <VisualBurger ingredients={this.state.currentOrderIngredients}/>
-            </BurgerIngredientContext.Provider>
-            <IngredientControlContext.Provider value={{increase: this.IncreaseIngredientHandler, decrease: this.DeceaseIngredientHandler, count: this.GetCount }}>
-                <Modal show= {this.state.purchasing} clickBackdrop={this.PurchasingCanceledHandler}>
-                    {orderModal}
-                </Modal>
-                
-                <IngredientControls 
-                    totalCost = {this.GetCostPerOrder(this.state.currentOrderIngredients).toFixed(2)} 
-                    orderDisabled={this.state.currentOrderIngredients.length <= 0} 
-                    order={this.AddCurrentBurgerToOrder}
-                    purchaseDisabled={this.state.orders.length === 0}
-                    purchase={this.PurchasingStartedHandler}/>
-            </IngredientControlContext.Provider>
 
-        </Aux>
+
+        return (
+        <cartContext.Consumer>
+            {(context => (
+                <div>
+                    <BurgerIngredientContext.Provider value={{removeFromIndex: this.RemoveIngredientFromIndex}}>
+                        <VisualBurger ingredients={this.state.currentOrderIngredients}/>
+                    </BurgerIngredientContext.Provider>
+                    <IngredientControlContext.Provider value={{increase: this.IncreaseIngredientHandler, decrease: this.DeceaseIngredientHandler, count: this.GetCount }}>
+                        <Modal show= {context.cartOpen} clickBackdrop={(ev) => {context.setCartOpen(false)}}>
+                            {orderModal}
+                        </Modal>
+                        
+                        <IngredientControls 
+                            totalCost = {this.GetCostPerOrder(this.state.currentOrderIngredients).toFixed(2)} 
+                            orderDisabled={this.state.currentOrderIngredients.length <= 0} 
+                            order={this.AddCurrentBurgerToOrder}/>
+                    </IngredientControlContext.Provider>
+                </div>
+            ))}
+        </cartContext.Consumer>
         )
     }
 }
 
-export default WithErrorHandler(BurgerBuilder, Axios)
+export default WithErrorHandler(BurgerBuilder, axios_order_instance)

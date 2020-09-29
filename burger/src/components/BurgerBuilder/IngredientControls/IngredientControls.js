@@ -4,8 +4,8 @@ import { BurgerOptions } from '../IngredientTypes'
 import classes from './IngredientControls.module.css'
 
 const ingredientControls = (props) => {
-    let possibleIngredients = BurgerOptions.map((ingredient) =>{
-        return (<IngredientControl ingredient={ingredient}/>)
+    let possibleIngredients = BurgerOptions.map((ingredient,index) =>{
+        return (<IngredientControl key={index} ingredient={ingredient}/>)
         })
 
     return (
@@ -15,9 +15,6 @@ const ingredientControls = (props) => {
             <button className={classes.OrderButton} 
                 disabled={props.orderDisabled} 
                 onClick={props.order}>ADD TO ORDER</button>
-            <button className={classes.OrderButton}
-                disabled={props.purchaseDisabled}
-                onClick={props.purchase}>PURCHASE</button>
         </div>
     )
 }

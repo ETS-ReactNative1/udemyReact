@@ -8,9 +8,9 @@
     padding: 16px;
     left: 15%;
     top: 30%;
+    overflow: scroll;
     box-sizing: border-box;
     transition: all 0.3s ease-out;
-    overflow: scroll;
     max-height: 300px;
 }
 

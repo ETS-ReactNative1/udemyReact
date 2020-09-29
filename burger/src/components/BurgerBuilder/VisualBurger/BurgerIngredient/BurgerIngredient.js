@@ -5,8 +5,6 @@ import PropTypes from 'prop-types'
 import burgerIngredientContext from '../../../../contexts/burgerIngredient-Context'
 
 const burgerIngredient = (props) => {
-
-    console.log("BurgerIngredient.js: " + props.type)
     let className = classes.Ingredient + ' '
 
     switch(props.type) {

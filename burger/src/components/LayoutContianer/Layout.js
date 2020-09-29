@@ -1,15 +1,14 @@
 import React, { Component } from 'react'
-import Aux from '../../HOC/AuxiliaryContainter';
 import classes from  './Layout.module.css'
 import Toolbar from '../../Navigation/Toolbar/Toolbar';
 import SideDrawer from '../../Navigation/SideDrawer/SideDrawer';
+import CartContext from '../../contexts/cart-Context';
 
 class Layout extends Component{
 
-
-
     state = {
-        sidebarOpen: false
+        sidebarOpen: false,
+        cartOpen : false
     };
 
     toggleSideBar = () => {
@@ -18,15 +17,22 @@ class Layout extends Component{
         this.setState({sidebarOpen: !lastSideBarState})
     }
 
+    setCartOpen = (newCartOpen) => {
+
+        if(this.state.cartOpen !== newCartOpen)
+        {
+            this.setState({cartOpen : newCartOpen})
+        }
+    }
 
     render () {
 
         return(
-            <Aux>
+            <CartContext.Provider value={{setCartOpen:this.setCartOpen, cartOpen:this.state.cartOpen}}>
                 <SideDrawer open={this.state.sidebarOpen} backdropClick={this.toggleSideBar}/>
                 <Toolbar MenuClicked={this.toggleSideBar}/>
                 <main className={classes.Content}>{this.props.children}</main>
-            </Aux>
+            </CartContext.Provider>
         )
         }
 
