@@ -1,5 +1,4 @@
 import React from 'react';
-
 import './AddPerson.css';
 
 const addPerson = (props) => (

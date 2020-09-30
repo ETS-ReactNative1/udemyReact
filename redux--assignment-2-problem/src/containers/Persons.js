@@ -1,12 +1,11 @@
 import React, { Component } from 'react';
-
+import  {connect} from 'react-redux'
 import Person from '../components/Person/Person';
 import AddPerson from '../components/AddPerson/AddPerson';
 
+
+
 class Persons extends Component {
-    state = {
-        persons: []
-    }
 
     personAddedHandler = () => {
         const newPerson = {
@@ -14,31 +13,36 @@ class Persons extends Component {
             name: 'Max',
             age: Math.floor( Math.random() * 40 )
         }
-        this.setState( ( prevState ) => {
-            return { persons: prevState.persons.concat(newPerson)}
-        } );
-    }
-
-    personDeletedHandler = (personId) => {
-        this.setState( ( prevState ) => {
-            return { persons: prevState.persons.filter(person => person.id !== personId)}
-        } );
+        this.props.personAddedHandler(newPerson)
     }
 
     render () {
         return (
             <div>
                 <AddPerson personAdded={this.personAddedHandler} />
-                {this.state.persons.map(person => (
+                {this.props.people.map(person => (
                     <Person 
                         key={person.id}
                         name={person.name} 
                         age={person.age} 
-                        clicked={() => this.personDeletedHandler(person.id)}/>
+                        clicked={() => this.props.personDeletedHandler(person.id)}/>
                 ))}
             </div>
         );
     }
 }
 
-export default Persons;
+const mapStateToProps = reducerState => {
+    return {
+        people: reducerState.people
+    };
+};
+
+const mapDispatchToProps = reducerDispatch => {
+    return {
+        personDeletedHandler: (id) => reducerDispatch({type: 'DEL', id: id}),
+        personAddedHandler : (person) => reducerDispatch({type:'ADD', person: person})
+    };
+};
+
+export default connect(mapStateToProps,mapDispatchToProps)(Persons);
