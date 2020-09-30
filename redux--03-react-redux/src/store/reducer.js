@@ -3,9 +3,9 @@ const initialState = {
 }
 
 const reducer = (state = initialState, action) => {
-    if (action.type === 'INCREMENT') {
+    if (action.type === 'ADD') {
         return {
-            counter: state.counter + 1
+            counter: state.counter + action.value
         }
     }
     return state;
