@@ -1,6 +1,6 @@
 import React from 'react'
 import IngredientControl from './IngredientControl/IngredientControl'
-import { BurgerOptions } from '../IngredientTypes'
+import { BurgerOptions } from '../../../store/IngredientTypes'
 import classes from './IngredientControls.module.css'
 
 const ingredientControls = (props) => {

@@ -1,5 +1,5 @@
 import React from 'react'
-import {IngredientTypes} from '../IngredientTypes.ts'
+import {IngredientTypes} from '../../../store/IngredientTypes.ts'
 import BurgerIngredient from './BurgerIngredient/BurgerIngredient'
 import classes from './VisualBurger.module.css'
 

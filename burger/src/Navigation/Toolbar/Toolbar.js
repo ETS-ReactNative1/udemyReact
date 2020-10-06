@@ -3,7 +3,9 @@ import classes from './Toolbar.module.css'
 import Logo from '../../components/UI/Logo/Logo'
 import HamburgerMenuButton from '../HamburgerMenuButton/HamburgerMenuButton'
 import {Link} from 'react-router-dom'
-import CartContext from '../../contexts/cart-Context'
+import {connect} from 'react-redux'
+import * as Actions from '../../store/action'
+
 
 class Toolbar extends Component {
     state = {
@@ -11,23 +13,37 @@ class Toolbar extends Component {
     }
 
     render () {
+        let CartText = 'Cart'
+        if(this.props.orderCount !== 0)
+        {
+            CartText = 'Cart(' + this.props.orderCount+')'
+        }
+
         return(
-        <CartContext.Consumer>
-            {(context) => (
-                <header className={classes.Toolbar}>
-                    <HamburgerMenuButton click={this.props.MenuClicked} />
-                    <Logo height='40px'/>
-                    <div>
-                        <button>
-                            <Link to={{pathname:'/'}}>Burger Builder</Link>
-                        </button>
-                        <button onClick={() => {context.setCartOpen(true)}}>Cart</button>
-                    </div>
-                </header>
-            )}
-        </CartContext.Consumer>
+            <header className={classes.Toolbar}>
+                <HamburgerMenuButton click={this.props.MenuClicked} />
+                <Logo height='40px'/>
+                <div>
+                    <button>
+                        <Link to={{pathname:'/'}}>Burger Builder</Link>
+                    </button>
+                    <button onClick={() => {this.props.SetCartOpen(true)}}>{CartText}</button>
+                </div>
+            </header>
         )
     }
 }
 
-export default Toolbar
+const reducerStateToProps = reducerState => {
+    return {
+        orderCount : reducerState.orders.length
+    }
+}
+
+const reducerDispatchToProps = reducerDispatch => {
+    return {
+        SetCartOpen: () => reducerDispatch({type:Actions.SetCartOpen, cartOpenStatus: true}) 
+    }
+}
+
+export default connect(reducerStateToProps, reducerDispatchToProps)(Toolbar)

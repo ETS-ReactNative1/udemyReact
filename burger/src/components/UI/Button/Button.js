@@ -14,8 +14,14 @@ const button = (props) => {
         classArray.push(classes.Danger)
     }
 
+    let disableButton = false
+    if(props.disabled)
+    {
+        disableButton = true
+    }
+
     return (
-        <button className={classArray.join(' ')} onClick={props.click}>{props.children}</button>
+        <button disabled={disableButton} className={classArray.join(' ')} onClick={props.click}>{props.children}</button>
     )
 }
 

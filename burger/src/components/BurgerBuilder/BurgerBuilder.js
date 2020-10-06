@@ -1,9 +1,7 @@
 import React, {Component} from 'react'
-import {IngredientTypes, BurgerOptions} from './IngredientTypes.ts'
+import * as Ingredient from '../../store/IngredientTypes.ts'
 import VisualBurger from './VisualBurger/VisualBurger'
 import IngredientControls from './IngredientControls/IngredientControls';
-import IngredientControlContext from '../../contexts/ingredientControl-Context'; 
-import BurgerIngredientContext from '../../contexts/burgerIngredient-Context';
 import Modal from '../UI/Modal/Modal';
 import OrderSummary from './OrderSummary/OrderSummary';
 import Button from '../UI/Button/Button'
@@ -11,71 +9,49 @@ import axios_order_instance from '../../axios-orders';
 import Spinner from '../UI/Spinner/Spinner'
 import WithErrorHandler from '../../HOC/WithErrorHandler'
 import {Link} from 'react-router-dom'
-import cartContext from '../../contexts/cart-Context';
-
+import {connect} from 'react-redux'
+import * as Actions from '../../store/action'
 
 class BurgerBuilder extends Component {
 
     state = {
-        currentOrderIngredients: [IngredientTypes.Meat],
-        orders: [],
-        busy: false,
-        orderNumber: null
+        busy: false
     };
 
-    componentDidMount () {
+    constructor (props) {
+        super();
         this.setState({busy: true})
-        axios_order_instance.get('/cart.json')
-        .then(getResponse => {
-            let neworders = []
-            let newHash = null
+        props.SetCartOpen(false)
 
-            Object.keys(getResponse.data).forEach(hash => {
-                newHash = hash;
-                Object.keys(getResponse.data[hash].Burgers).forEach(burgerKey =>{
-                    let burgerOrder = getResponse.data[hash].Burgers[burgerKey]
-                    neworders.push(burgerOrder.Ingredients) })
+        if(!props.setupComplete)
+        {
+            axios_order_instance.get('/cart.json')
+            .then(getResponse => {
+                let neworders = []
+                let newHash = null
+
+                Object.keys(getResponse.data).forEach(hash => {
+                    newHash = hash;
+                    Object.keys(getResponse.data[hash].Burgers).forEach(burgerKey =>{
+                        let burgerOrder = getResponse.data[hash].Burgers[burgerKey]
+                        neworders.push({ingredients: burgerOrder.Ingredients, cost: Ingredient.GetCostOfOrder(burgerOrder.Ingredients)})
+                
+                    })
+                })
+                
+
+                this.setState({busy:false})
+
+                props.AddWebBurgers(neworders,newHash)
+                props.CompleteSetup()
             })
-        
-            
-            this.setState({orderNumber:newHash, 
-                            orders:neworders,
-                            busy:false})
-            }
-            
-        )
-        .catch(getError => console.log(getError),
-                            this.setState({busy: false}))
-    }
-
-    IncreaseIngredientHandler = (event,type) => {
-        const ingredients =[...this.state.currentOrderIngredients]
-        ingredients.push(type)
-
-        this.setState({currentOrderIngredients: ingredients})
-    }
-
-    DeceaseIngredientHandler = (event,type) => {
-        let ingredients =[...this.state.currentOrderIngredients]
-        let i = ingredients.lastIndexOf(type)
-        if(i !== -1) {
-            ingredients.splice(i,1);
-            this.setState({currentOrderIngredients: ingredients})
+            .catch(getError => console.log(getError),
+                                this.setState({busy: false}))
         }
-    }
-
-    RemoveIngredientFromIndex = (event, index) => {
-        let ingredientsCopy = [...this.state.currentOrderIngredients]
-        if(index<0 || index>=ingredientsCopy.length) {
-            return
-        }
-
-        ingredientsCopy.splice(index,1)
-        this.setState({currentOrderIngredients: ingredientsCopy})
     }
 
     GetCount = (ingredient) =>{
-        let ingFilter = this.state.currentOrderIngredients.filter(item => item === ingredient)
+        let ingFilter = this.props.currentOrderIngredients.filter(item => item === ingredient)
 
         if(ingFilter == null) {
             return 0
@@ -83,68 +59,31 @@ class BurgerBuilder extends Component {
 
         return ingFilter.length
     }
-
-    GetCountOnOrder = (order, ingredient) =>{
-        let ingFilter = order.filter(item => item === ingredient)
-
-        if(ingFilter == null) {
-            return 0
-        }
-
-        return ingFilter.length
-    }    
-
-    GetTotalCost = () => {
-        let cost = 0 //base cost before options
-
-        this.state.orders.forEach(order => {
-            BurgerOptions.forEach(option => {
-                cost += this.GetCountOnOrder(order, option.Type) * option.Cost
-            });
-        })
-        
-
-        return cost;
-    }
-
-    GetCostPerOrder =(order) => {
-        let cost= 0;
-        BurgerOptions.forEach(option => {
-            cost += this.GetCountOnOrder(order, option.Type) * option.Cost
-        });
-
-        return cost;
-    }
-
-
 
     AddCurrentBurgerToOrder = () => {
         
-        this.setState({busy:true})
-        let ingredientsCopy = [...this.state.currentOrderIngredients]
-        let ordersCopy = [...this.state.orders]
+        if(!this.state.busy)
+        {
+            this.setState({busy:true})
+        }
 
-        ordersCopy.push(ingredientsCopy);
+        const cost = Ingredient.GetCostOfOrder(this.props.currentOrderIngredients);
 
-        let newBurger = [IngredientTypes.Meat]
-        this.setState({orders: ordersCopy, currentOrderIngredients:newBurger})
-
-        const cost = this.GetCostPerOrder(ingredientsCopy);
         const jsonBurger = {
-                    Ingredients: ingredientsCopy,
+                    Ingredients: this.props.currentOrderIngredients,
                     Cost: cost
                 }
+        this.props.AddCurrentBurgerToOrder(this.props.currentOrderIngredients, cost)
 
 
-
-        if(this.state.orderNumber !== null){
-            axios_order_instance.get('/cart/' + this.state.orderNumber +'.json')
+        if(this.props.orderNumber !== null){
+            axios_order_instance.get('/cart/' + this.props.orderNumber +'.json')
             .then(response => {
                 let orders = response.data.Burgers
                 orders.push(jsonBurger)
                 
 
-                axios_order_instance.patch('/cart/' + this.state.orderNumber +'/.json', {'Burgers':orders, 'Total':(response.data.Total+cost)})
+                axios_order_instance.patch('/cart/' + this.props.orderNumber +'/.json', {'Burgers':orders, 'Total':(response.data.Total+cost)})
                 .then(() => this.setState({busy:false})
                 )
                 .catch(error => {this.setState({busy:false})
@@ -160,9 +99,10 @@ class BurgerBuilder extends Component {
                 Burgers: [jsonBurger],
                 Total: cost
             })
-            .then(response => this.setState({busy:false,
-                                            orderNumber: response.data.name})
-            )
+            .then(response => {
+                this.setState({busy:false})
+                this.props.AddWebBurgers(this.props.orders,response.data.name)
+            })
             .catch(error => {this.setState({busy:false})
                             console.log(error)}) 
         }
@@ -170,48 +110,62 @@ class BurgerBuilder extends Component {
 
     render () {
 
-        let orderModal = (
-            <cartContext.Consumer>
-                {(context) => (
-                    <React.Fragment>
-                        <OrderSummary orders={this.state.orders} costs={this.state.orders.map((order) => {return (this.GetCostPerOrder(order))})}/>
-                        <Link to={{pathname:'/orders'}}>
-                            <Button type="Confirm" disabled={this.state.orderNumber === null}>
-                                Purchase
-                            </Button>
-                        </Link>
-                        <Button type="Cancel" click={(ev) => {context.setCartOpen(false)}}>Cancel</Button> 
-                    </React.Fragment>)}
-            </cartContext.Consumer>)
+        let orderModal = null
         if(this.state.busy)
         {
             orderModal = <Spinner/>
+        }
+        else if (this.props.cartOpen)
+        {
+            orderModal = ( 
+                <React.Fragment>
+                    <OrderSummary orders={this.props.orders}/>
+                    <Link to={{pathname:'/orders'}}>
+                        <Button type="Confirm" disabled={this.props.orderNumber === null}>
+                            Purchase
+                        </Button>
+                    </Link>
+                    <Button type="Cancel" click={(ev) => {this.props.SetCartOpen(false)}}>Cancel</Button> 
+                </React.Fragment>)
         }
 
 
 
         return (
-        <cartContext.Consumer>
-            {(context => (
-                <div>
-                    <BurgerIngredientContext.Provider value={{removeFromIndex: this.RemoveIngredientFromIndex}}>
-                        <VisualBurger ingredients={this.state.currentOrderIngredients}/>
-                    </BurgerIngredientContext.Provider>
-                    <IngredientControlContext.Provider value={{increase: this.IncreaseIngredientHandler, decrease: this.DeceaseIngredientHandler, count: this.GetCount }}>
-                        <Modal show= {context.cartOpen} clickBackdrop={(ev) => {context.setCartOpen(false)}}>
-                            {orderModal}
-                        </Modal>
-                        
-                        <IngredientControls 
-                            totalCost = {this.GetCostPerOrder(this.state.currentOrderIngredients).toFixed(2)} 
-                            orderDisabled={this.state.currentOrderIngredients.length <= 0} 
-                            order={this.AddCurrentBurgerToOrder}/>
-                    </IngredientControlContext.Provider>
-                </div>
-            ))}
-        </cartContext.Consumer>
-        )
+        <div>
+            <VisualBurger ingredients={this.props.currentOrderIngredients}/>
+            <Modal show= {this.props.cartOpen} clickBackdrop={(ev) => {this.props.SetCartOpen(false)}}>
+                {orderModal}
+            </Modal>
+            
+            <IngredientControls 
+                totalCost = {Ingredient.GetCostOfOrder(this.props.currentOrderIngredients).toFixed(2)} 
+                orderDisabled={this.props.currentOrderIngredients.length <= 0} 
+                order={this.AddCurrentBurgerToOrder}/>
+        </div>)
     }
 }
 
-export default WithErrorHandler(BurgerBuilder, axios_order_instance)
+const reducerStateToProps = reducerState => {
+    return {
+        currentOrderIngredients : reducerState.currentorder,
+        orders : reducerState.orders,
+        orderNumber : reducerState.orderNumber,
+        cartOpen : reducerState.cartOpen,
+        setupComplete : reducerState.burgerSetupComplete
+    }
+}
+
+const reducerDispatchToProps = reducerDispatch => {
+    return {
+        AddCurrentBurgerToOrder : (ing, cost) => reducerDispatch({type:Actions.AddCurrentBurgerToOrder, order:{ingredients: ing, cost:cost }}),
+        AddWebBurgers : (orders,hash) => reducerDispatch({type: Actions.SetOrdersFromWeb, webOrders: orders, hash: hash}),
+        ClearCart: () => reducerDispatch({type:Actions.ClearCart}),
+        SetCartOpen: (openStatus) => reducerDispatch({type:Actions.SetCartOpen, cartOpenStatus:openStatus}),
+        CompleteSetup : () => reducerDispatch({type:Actions.BurgerSetupComplete})
+
+
+    }
+}
+
+export default connect(reducerStateToProps, reducerDispatchToProps)( WithErrorHandler(BurgerBuilder, axios_order_instance))

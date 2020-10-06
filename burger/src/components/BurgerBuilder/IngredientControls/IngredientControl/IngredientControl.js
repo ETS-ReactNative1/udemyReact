@@ -1,26 +1,43 @@
-import React from 'react'
+import React, { Component } from 'react'
 import classes from './IngredientContol.module.css'
-import ingredientControlContext from '../../../../contexts/ingredientControl-Context'
+import {connect} from 'react-redux'
+import * as Actions from '../../../../store/action'
+import * as Ingredient from '../../../../store/IngredientTypes'
 
-const IngredientControl = (props) => {
+class IngredientControl extends Component {
 
 
-    return (
-        <ingredientControlContext.Consumer>
-            {(context)=> (
-                <ul className={classes.horizontal+ ' ' +classes.IngredientControl}>
-                    <li className={classes.Label}>{props.ingredient.Name + ': $'+ props.ingredient.Cost.toFixed(2)}</li>
-                    <li>
-                        <button className={classes.Less} disabled={context.count(props.ingredient.Type)<=0} onClick={(ev) => context.decrease(ev, props.ingredient.Type)}>Less</button>
-                    </li>
-                    <li>{context.count(props.ingredient.Type)}</li>
-                    <li>
-                        <button className={classes.More}  onClick={(ev) => context.increase(ev, props.ingredient.Type)}>More</button>
-                    </li>
-                </ul>
-            )}
-        </ingredientControlContext.Consumer>
-    )
+    render () {
+
+        let type = this.props.ingredient.Type
+        let count = Ingredient.GetCountOnOrder(this.props.currentOrder, type)
+
+        return (
+            <ul className={classes.horizontal+ ' ' +classes.IngredientControl}>
+                <li className={classes.Label}>{this.props.ingredient.Name + ': $'+ this.props.ingredient.Cost.toFixed(2)}</li>
+                <li>
+                    <button className={classes.Less} disabled={count<=0} onClick={() => this.props.decreaseIng(this.props.ingredient.Type)}>Less</button>
+                </li>
+                <li>{Ingredient.GetCountOnOrder(this.props.currentOrder,this.props.ingredient.Type)}</li>
+                <li>
+                    <button className={classes.More}  onClick={()=> this.props.increaseIng(this.props.ingredient.Type)}>More</button>
+                </li>
+            </ul>
+        )
+    }
 }
 
-export default IngredientControl
+const StateToProps = reducerState => {
+    return {
+        currentOrder : reducerState.currentorder
+    }
+}
+
+const DispatcherToProps = reducerDispatcher => {
+    return{
+        increaseIng : (ingType) => reducerDispatcher({type : Actions.IncreaseIngredient, ingType: ingType}),
+        decreaseIng : (ingType) => reducerDispatcher({type : Actions.DecreaseIngredient, ingType: ingType})
+    }
+}
+
+export default connect(StateToProps,DispatcherToProps)(IngredientControl)
