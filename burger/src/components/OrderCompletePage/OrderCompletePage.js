@@ -7,15 +7,11 @@ import {Route} from 'react-router-dom'
 import Modal from '../UI/Modal/Modal'
 import Spinner from '../UI/Spinner/Spinner'
 import {connect} from 'react-redux'
-import * as Actions from '../../store/action'
+import * as Actions from '../../store/actions/allActionFunctions'
 import ContactData from '../../components/OrderCompletePage/ContactData/ContactData'
 
 
 class OrderCompletePage extends Component {
-    state = { 
-        busy:false
-    }
-
 
     contactDataButtonClickedHandler = () => {
         this.props.history.replace('/orders/contact-data')
@@ -23,7 +19,6 @@ class OrderCompletePage extends Component {
 
 
     purchaseHandler = ( event ) => {
-        this.setBusy(true)
         let Total =0
         let jsonBurgers = this.props.orders.map((order, ind) => {
             Total += order.cost
@@ -43,42 +38,15 @@ class OrderCompletePage extends Component {
             customer: this.props.contactData
         }
 
-        axios_order_instance.post('/orders.json',jsonPurchase)
-        .then( () => {
-            if(this.props.orderHash)
-            {
-                axios_order_instance.delete('/cart/'+this.props.orderHash+'.json')
-                .then(
-                    this.props.ClearCart(),
-                    this.props.history.replace('/'),
-                    this.setBusy(false)
-                )
-                .catch(error => {
-                    console.log(error)
-                    this.setBusy(false)
-                })
-                
-            }
-        })
-        .catch(error=> {
-            console.log(error)
-            this.setBusy(false)
-        });
-            
-    }
-
-    setBusy = (busyState) => {
-
-        if(this.state.busy!== busyState)
-        {
-            this.setState({busy: busyState})
-        }
+        this.props.PurchaseCart(jsonPurchase, this.props.orderHash, this.props.idToken)
+        
+        this.props.history.replace('/')
     }
 
 
     render () {
     
-        if (this.props.orders.length === 0 && !this.state.busy) {
+        if (this.props.orders.length === 0 && !this.props.appBusy) {
             return (
                     <h2>Nothing in Cart, so add some burgers first!</h2>
                 )
@@ -101,7 +69,7 @@ class OrderCompletePage extends Component {
 
         return (
             <div  className={classes.OrderCompletePage}>
-                <Modal show= {this.state.busy}>
+                <Modal show= {this.props.appBusy}>
                     <Spinner/>
                 </Modal>                        
                 <h2>Order Summary:</h2>
@@ -123,16 +91,19 @@ class OrderCompletePage extends Component {
 const ReducerStateToProps = (reducerState) =>
 {
     return {
-        orders: reducerState.orders,
-        orderHash: reducerState.orderNumber,
-        contactData : reducerState.contactData,
-        contactDataFormValid : reducerState.contactDataValid
+        orders: reducerState.Orders.orders,
+        orderHash: reducerState.Orders.orderNumber,
+        contactData : reducerState.Orders.contactData,
+        contactDataFormValid : reducerState.Orders.contactDataValid,
+        appBusy : reducerState.Orders.appBusy,
+        idToken : reducerState.SignIn.idToken
     }
 }
 
 const ReducerDispatchToProps = (reducerDispatch) => {
     return{
-        ClearCart : () => reducerDispatch({type:Actions.ClearCart})
+        ClearCart : () => reducerDispatch(Actions.clearCart()),
+        PurchaseCart : (jsonPurchase, orderHash) => reducerDispatch(Actions.purchaseCart(jsonPurchase,orderHash))
     }
 }
 

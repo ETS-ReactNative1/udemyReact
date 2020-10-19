@@ -3,7 +3,7 @@ import classes from './BurgerIngredient.module.css'
 import PropTypes from 'prop-types'
 import React, {Component } from 'react'
 import {connect} from 'react-redux'
-import * as Actions from '../../../../store/action'
+import * as Actions from '../../../../store/actions/allActionFunctions'
 
 class burgerIngredient extends Component {
 
@@ -57,7 +57,7 @@ const ReducerStateToProps = (reducerState) =>{
 
 const ReducerDispatchToProps = (reducerDispatch) => {
     return {
-        removeFromIndex : (ind) => reducerDispatch({type: Actions.RemoveIngredientFromIndex, index: ind})
+        removeFromIndex : (ind) => reducerDispatch(Actions.removeIngredientFromIndex(ind))
     }
 }
 

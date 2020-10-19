@@ -1,7 +1,7 @@
 import React, { Component } from 'react'
 import classes from './IngredientContol.module.css'
 import {connect} from 'react-redux'
-import * as Actions from '../../../../store/action'
+import * as Actions from '../../../../store/actions/allActionFunctions'
 import * as Ingredient from '../../../../store/IngredientTypes'
 
 class IngredientControl extends Component {
@@ -29,14 +29,14 @@ class IngredientControl extends Component {
 
 const StateToProps = reducerState => {
     return {
-        currentOrder : reducerState.currentorder
+        currentOrder : reducerState.Orders.currentorder
     }
 }
 
 const DispatcherToProps = reducerDispatcher => {
     return{
-        increaseIng : (ingType) => reducerDispatcher({type : Actions.IncreaseIngredient, ingType: ingType}),
-        decreaseIng : (ingType) => reducerDispatcher({type : Actions.DecreaseIngredient, ingType: ingType})
+        increaseIng : (ingType) => reducerDispatcher(Actions.increaseIngredient(ingType)),
+        decreaseIng : (ingType) => reducerDispatcher(Actions.decreaseIngredient(ingType))
     }
 }
 

@@ -1,13 +1,8 @@
 import React, {Component} from 'react'
 import {connect} from 'react-redux'
-import * as Actions from '../../../store/action'
-import Button from '../../UI/Button/Button'
-import Spinner from '../../UI/Spinner/Spinner'
-import axios_order_instance from '../../../axios-orders'
-import classes from './ContactData.css'
-import { create} from 'typescript'
-import InputElement from '../InputElement/InputElement'
-import { SetContactDataFormStructure } from '../../../store/action'
+import * as Actions from '../../../store/actions/allActionFunctions'
+import InputElement from '../../UI/InputElement/InputElement'
+import * as Utility from '../../../Utility/Utility'
 
 class ContactData extends Component {
     state={
@@ -29,50 +24,9 @@ class ContactData extends Component {
                 validationRules:{required: true} }
         ]
 
-        let form = {}
-        contactForm.forEach( entry => {     
-            
-            let parent = form;   
-            if(entry.parent){
-                if( !form[entry.parent]){
-                    form[entry.parent] = {isParent:true}
-                }
 
-                parent = form[entry.parent]
-            }
 
-            switch(entry.type)
-            {
-                case 'input':
-                    parent[entry.placeholder] = {
-                        elementType : 'input',
-                        elementConfig : {
-                            type: 'text',
-                            placeholder : entry.placeholder
-                        },
-                        value : '',
-                        valid : true,
-                        touched : false,
-                        validationRules: entry.validationRules
-                    }
-                    break;
-                case 'select':
-                    parent[entry.placeholder] = {
-                        elementType : 'select',
-                        elementConfig : {
-                            options: entry.options
-                        },
-                        value : '',
-                        valid : true,
-                        touched : true,
-                        validationRules: entry.validationRules
-                    }
-                    break;
-                default: break;
-            }
-        })
-
-        props.SetContactDataFormStructure(form)
+        props.SetContactDataFormStructure(contactForm)
 
     }
 
@@ -128,51 +82,8 @@ class ContactData extends Component {
     }
 
     render () {
-        let  identifier = ""
-        let InputElements = [];
-        for(let key in this.props.orderForm)
-        {
-            identifier = key;
-            let element= this.props.orderForm[key]
-            if(element.isParent)
-            {
-                
-                for(let parentkey in element)
-                {
-                    if(parentkey === 'isParent')
-                        continue;
 
-                    let childElement = element[parentkey]
-                    let childIdentifier = identifier+'.'+parentkey
-
-                    InputElements.push(
-                        {
-                            elementType:childElement.elementType,
-                            placeholder: childElement.elementConfig.placeholder,
-                            options:childElement.elementConfig.options,
-                            value:childElement.value,
-                            identifier : childIdentifier,
-                            valid: childElement.valid
-                        })
-                }
-            }
-            else
-            {
-                InputElements.push(
-                    {
-                        elementType:element.elementType,
-                        placeholder: element.elementConfig.placeholder,
-                        label: element.elementConfig.placeholder,
-                        options:element.elementConfig.options,
-                        value:element.value,
-                        identifier : identifier,
-                        valid: element.valid
-                    })
-            }
-
-        }
-
-        let elements = InputElements.map((entry,index) => {
+        let elements = Utility.formToInputElementArray(this.props.orderForm).map((entry,index) => {
             return(
                 <InputElement 
                     key = {index}
@@ -187,7 +98,7 @@ class ContactData extends Component {
         })
 
         return (
-            <div className='ContactDaata'>
+            <div className='ContactData'>
                 {elements}
             </div>
         )
@@ -198,14 +109,14 @@ class ContactData extends Component {
 const ReducerStateToProps = (reducerState) =>
 {
     return {
-        orderForm: reducerState.contactData
+        orderForm: reducerState.Orders.contactData
     }
 }
 
 const ReducerDispatchToProps = (reducerDispatch) => {
     return{
-        SetContactData : (identifier, value, valid ) => reducerDispatch({type:Actions.SetContactData, inputIdentifier:identifier, value:value, valid:valid }),
-        SetContactDataFormStructure : (form) => reducerDispatch({type:Actions.SetContactDataFormStructure, form:form})
+        SetContactData : (identifier, value, valid ) => reducerDispatch(Actions.setContactData(identifier, value, valid)),
+        SetContactDataFormStructure : (form) => reducerDispatch(Actions.setContactDataFormStructure(form))
     }
 }
 

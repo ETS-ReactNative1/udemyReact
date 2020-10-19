@@ -4,7 +4,7 @@ import Logo from '../../components/UI/Logo/Logo'
 import HamburgerMenuButton from '../HamburgerMenuButton/HamburgerMenuButton'
 import {Link} from 'react-router-dom'
 import {connect} from 'react-redux'
-import * as Actions from '../../store/action'
+import * as Actions from '../../store/actions/allActionFunctions'
 
 
 class Toolbar extends Component {
@@ -12,6 +12,7 @@ class Toolbar extends Component {
         cartItems: 0
     }
 
+    
     render () {
         let CartText = 'Cart'
         if(this.props.orderCount !== 0)
@@ -19,6 +20,11 @@ class Toolbar extends Component {
             CartText = 'Cart(' + this.props.orderCount+')'
         }
 
+        let profileButton = <button><Link to={{pathname:'/signin'}}>Sign On</Link> </button>
+        if(this.props.authenticated)
+        {
+            profileButton = <button onClick={() => this.props.LogOut()}>Sign Off</button>
+        }
         return(
             <header className={classes.Toolbar}>
                 <HamburgerMenuButton click={this.props.MenuClicked} />
@@ -28,6 +34,7 @@ class Toolbar extends Component {
                         <Link to={{pathname:'/'}}>Burger Builder</Link>
                     </button>
                     <button onClick={() => {this.props.SetCartOpen(true)}}>{CartText}</button>
+                    {profileButton}
                 </div>
             </header>
         )
@@ -36,13 +43,15 @@ class Toolbar extends Component {
 
 const reducerStateToProps = reducerState => {
     return {
-        orderCount : reducerState.orders.length
+        orderCount : reducerState.Orders.orders.length,
+        authenticated : reducerState.SignIn.authenticated
     }
 }
 
 const reducerDispatchToProps = reducerDispatch => {
     return {
-        SetCartOpen: () => reducerDispatch({type:Actions.SetCartOpen, cartOpenStatus: true}) 
+        SetCartOpen: () => reducerDispatch(Actions.setCartOpen(true)),
+        LogOut : () => reducerDispatch(Actions.logOut())
     }
 }
 

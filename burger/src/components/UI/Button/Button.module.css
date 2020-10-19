@@ -8,12 +8,9 @@
     padding: 10px;
     margin: 10px;
     font-weight: bold;
+    text-align: center;
 }
 
-.Button:first-of-type {
-    margin-left: 0;
-    padding-left: 0;
-}
 
 .Button:disabled {
     opacity: .5;
@@ -26,4 +23,10 @@
 
 .Danger {
     color: #944317;
+}
+
+.SignIn {
+    padding: 20px 0 0;
+    width: 100%;
+    margin: 0;
 }
