@@ -30,34 +30,34 @@ export const createNewAccount = (email, password) => {
     }
 }
 
-export const refreshAccount = (refreshToken) => {
+// export const refreshAccount = (refresh_Token) => {
 
-    return (dispatch) => {
+//     return (dispatch) => {
 
-        dispatch(setLogInBusy(true))
-        let url = 'https://securetoken.googleapis.com/v1/token?key=' + API_KEY
+//         dispatch(setLogInBusy(true))
+//         let url = 'https://securetoken.googleapis.com/v1/token?key=' + API_KEY
 
 
 
-        const payload =  {
-            rant_type : "refresh_token",
-            refresh_token : refresh_token
-        }
+//         const payload = {
+//             rant_type: "refresh_token",
+//             refresh_token: props.refresh_token
+//         }
 
-        axios_instance.post(url,payload)
-        .then( (response) => {
-            dispatch(setLogInTokens(response.data.localId,
-                response.data.refreshToken,
-                (new Date()).getTime()+(new Date(response.data.expiresIn)).getTime()))
-            dispatch(setLogInBusy(false))
-        })
-        .catch( (error) => {
-            console.log(error)
-            dispatch(setLogInBusy(false))
-        })
+//         axios_instance.post(url, payload)
+//             .then((response) => {
+//                 dispatch(setLogInTokens(response.data.localId,
+//                     response.data.refreshToken,
+//                     (new Date()).getTime() + (new Date(response.data.expiresIn)).getTime()))
+//                 dispatch(setLogInBusy(false))
+//             })
+//             .catch((error) => {
+//                 console.log(error)
+//                 dispatch(setLogInBusy(false))
+//             })
 
-    }
-}
+//     }
+// }
 
 export const logInToAccount = (email,password) => {
     return (dispatch) => {

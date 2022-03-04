@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+
+ <html>
+     <head>
+     </head>
+     <body>
+        <h1>Notes App</h1>
+        <h2>so you won't be able to forget... ever</h2>
+
+        <input id="TaskFilter" placeholder="Filter">
+        <div>
+            <label for="cars">Choose a car:</label>
+            <select name="SortBy" id="SortByCombo">
+                <option value="None">None</option>
+                <option value="Sort_Alphabetically">Alphabetically</option>
+                <option value="Sort_Date">Created By</option>
+            </select>
+        </div>
+        <label>
+            Hide completed Tasks
+            <input id="filterCompleted" type="checkbox">
+        </label>  
+        <ul id="Tasks"></ul>
+              
+        <form id="AddNoteBlock">
+            <input placeholder="Task Name" name='TaskName'>
+            <button id="TaskButton">Add Text</button>
+        </form>
+        <button id="SelectButton" style="margin: 10px 0; border-radius:5px; border-color: darkgray; outline:none">Turn on Selection</button>
+        <div id="SelectionOptions" style="display: inline;">
+        </div>
+        <p id="RemainingTasksText"></p>
+        <script src="./notes-app-functions.js"></script>
+        <script src="./notes-app.js"></script>
+     </body>
+ </html>
